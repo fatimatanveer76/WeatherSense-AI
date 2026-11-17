@@ -321,6 +321,11 @@ POST http://127.0.0.1:8000/api/predict/
 ```
 
 ---
+## SS
+<img width="1490" height="1003" alt="image" src="https://github.com/user-attachments/assets/ba2b49a5-6679-4006-b4bc-ce2c74b84003" />
+<img width="985" height="804" alt="Screenshot 2026-11-18 021303" src="https://github.com/user-attachments/assets/edb6025d-1ec7-4017-a4eb-a6ea5ea19eaa" />
+<img width="902" height="701" alt="Screenshot 2026-11-18 021248" src="https://github.com/user-attachments/assets/044d909f-3327-4ea3-82f8-e88c68a7dbea" />
+
 
 ## 🔮 Future Improvements
 
