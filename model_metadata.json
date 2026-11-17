@@ -1,0 +1,174 @@
+{
+    "best_k": 3,
+    "highest_accuracy": 0.9916666666666667,
+    "highest_accuracy_pct": "99.17%",
+    "distance_metric": "Euclidean Distance (Minkowski with p=2)",
+    "num_samples": 1200,
+    "num_train": 960,
+    "num_test": 240,
+    "classes": [
+        "Cloudy",
+        "Rainy",
+        "Snowy",
+        "Sunny"
+    ],
+    "numerical_features": [
+        "Temperature_C",
+        "Humidity_pct",
+        "Wind_Speed_kmh",
+        "Precipitation_mm",
+        "Atmospheric_Pressure_hPa",
+        "UV_Index",
+        "Visibility_km"
+    ],
+    "categorical_features": [
+        "Cloud_Cover",
+        "Wind_Direction",
+        "Season"
+    ],
+    "cat_options": {
+        "Cloud_Cover": [
+            "Clear",
+            "Overcast",
+            "Partly Cloudy"
+        ],
+        "Wind_Direction": [
+            "E",
+            "N",
+            "NE",
+            "NW",
+            "S",
+            "SE",
+            "SW",
+            "W"
+        ],
+        "Season": [
+            "Autumn",
+            "Spring",
+            "Summer",
+            "Winter"
+        ]
+    },
+    "k_results": [
+        {
+            "k": 1,
+            "train_accuracy": 1.0,
+            "test_accuracy": 0.9833333333333333,
+            "accuracy_pct": "98.33%"
+        },
+        {
+            "k": 2,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9791666666666666,
+            "accuracy_pct": "97.92%"
+        },
+        {
+            "k": 3,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 4,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9833333333333333,
+            "accuracy_pct": "98.33%"
+        },
+        {
+            "k": 5,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 6,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 7,
+            "train_accuracy": 0.9947916666666666,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 8,
+            "train_accuracy": 0.9947916666666666,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 9,
+            "train_accuracy": 0.9947916666666666,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 10,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9833333333333333,
+            "accuracy_pct": "98.33%"
+        },
+        {
+            "k": 11,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 12,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9833333333333333,
+            "accuracy_pct": "98.33%"
+        },
+        {
+            "k": 13,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 14,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9875,
+            "accuracy_pct": "98.75%"
+        },
+        {
+            "k": 15,
+            "train_accuracy": 0.9927083333333333,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 16,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 17,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 18,
+            "train_accuracy": 0.99375,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 19,
+            "train_accuracy": 0.9947916666666666,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        },
+        {
+            "k": 20,
+            "train_accuracy": 0.9947916666666666,
+            "test_accuracy": 0.9916666666666667,
+            "accuracy_pct": "99.17%"
+        }
+    ]
+}

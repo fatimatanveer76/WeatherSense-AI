@@ -1,0 +1,181 @@
+{% extends "predictor/base.html" %}
+{% load static %}
+
+{% block title %}Model & Math Insights - KNN Weather Classifier{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Model Performance & Distance Analytics</h1>
+        <p class="text-slate-600 mt-1 text-sm">
+            Empirical evaluation of hyperparameter tuning across K=1 to K=20, distance vectorization, and feature scaling.
+        </p>
+    </div>
+
+    <!-- Metric Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Optimal Hyperparameter</span>
+            <div class="text-3xl font-black text-indigo-600 mt-2">K = {{ best_k }}</div>
+            <p class="text-xs text-slate-500 mt-1">Balances variance & bias across test set.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Peak Test Accuracy</span>
+            <div class="text-3xl font-black text-emerald-600 mt-2">{{ highest_accuracy }}</div>
+            <p class="text-xs text-slate-500 mt-1">Evaluated on stratified holdout test set.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Distance Metric</span>
+            <div class="text-2xl font-black text-slate-800 mt-2">{{ distance_metric }}</div>
+            <p class="text-xs text-slate-500 mt-1">p=1 (Manhattan) & p=2 (Euclidean)</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Data Distribution</span>
+            <div class="text-2xl font-black text-sky-600 mt-2">{{ metadata.total_samples }} Samples</div>
+            <p class="text-xs text-slate-500 mt-1">Train: {{ metadata.train_samples }} (80%) | Test: {{ metadata.test_samples }} (20%)</p>
+        </div>
+    </div>
+
+    <!-- Visual Curve & Math Explanation Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Plot Box -->
+        <div class="lg:col-span-7 bg-white rounded-2xl p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">K vs Accuracy Learning Curve</h2>
+                    <p class="text-xs text-slate-500">Visualization of model accuracy across the hyperparameter range K=1 through K=20.</p>
+                </div>
+                <span class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full font-bold">
+                    Peak at K={{ best_k }}
+                </span>
+            </div>
+
+            <!-- Plot Image -->
+            <div class="rounded-xl overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center p-2">
+                <img src="{% static 'predictor/images/knn_accuracy_plot.png' %}" alt="KNN Accuracy Curve" class="w-full h-auto object-contain rounded-lg shadow-sm">
+            </div>
+
+            <p class="text-xs text-slate-500 leading-relaxed">
+                At small values ($K=1$), training accuracy is 100% due to memorization of historical points, with higher susceptibility to isolated noise.
+                As $K$ increases toward $K={{ best_k }}$, test accuracy peaks at <span class="font-bold text-slate-800">{{ highest_accuracy }}</span>, establishing a smooth and generalized decision boundary.
+            </p>
+        </div>
+
+        <!-- Mathematical & Algorithmic Foundations -->
+        <div class="lg:col-span-5 bg-white rounded-2xl p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-6">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Geometric & Distance Mechanics</h2>
+                <p class="text-xs text-slate-500">Mathematical impact of feature standardization and distance calculations.</p>
+            </div>
+
+            <!-- Principle 1: Standardization -->
+            <div class="space-y-2">
+                <div class="flex items-center space-x-2 text-indigo-600 font-bold text-sm">
+                    <span>1.</span>
+                    <h4>Z-Score Feature Standardization</h4>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl font-mono text-xs text-slate-700">
+                    z_j = (x_j - &mu;_j) / &sigma;_j
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Atmospheric pressure (~1015 hPa) has variance on the order of 100, while precipitation (0-20 mm) has variance under 15. Without standardization, the distance calculation would be 98% dominated by pressure alone. Standardization brings all features to mean 0 and unit variance, granting each meteorological sensor equal geometric influence.
+                </p>
+            </div>
+
+            <!-- Principle 2: Distance Metrics -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <div class="flex items-center space-x-2 text-indigo-600 font-bold text-sm">
+                    <span>2.</span>
+                    <h4>Distance Metrics Evaluated</h4>
+                </div>
+                <div class="space-y-1 font-mono text-xs text-slate-700">
+                    <div class="p-2 bg-slate-50 rounded-lg">
+                        <strong>Euclidean (L2):</strong> d(x, y) = &radic;(&sum; (x_i - y_i)&sup2;)
+                    </div>
+                    <div class="p-2 bg-slate-50 rounded-lg">
+                        <strong>Manhattan (L1):</strong> d(x, y) = &sum; |x_i - y_i|
+                    </div>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Manhattan distance measures grid-like rectilinear distances across the 22 standardized dimensions, which proved slightly more robust against multidimensional outliers in this dataset (96.67% accuracy vs 95.42% for Euclidean).
+                </p>
+            </div>
+
+            <!-- Principle 3: Plurality Voting -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+                <div class="flex items-center space-x-2 text-indigo-600 font-bold text-sm">
+                    <span>3.</span>
+                    <h4>Neighborhood Plurality Voting</h4>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    For any query vector, the distances to all 960 training samples are computed. The K={{ best_k }} lowest distance samples are extracted, and their categorical labels (Sunny, Rainy, Cloudy, Snowy) cast equal votes.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comprehensive Accuracy Table -->
+    <div class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Hyperparameter Performance Table (K=1 to 20)</h2>
+                <p class="text-xs text-slate-500">Exact training and testing accuracy recorded for each neighbor count.</p>
+            </div>
+            <span class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full font-semibold border border-indigo-200">
+                20 Discrete Experiments
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="text-slate-500 bg-slate-50 border-b border-slate-200">
+                        <th class="py-3 px-4 font-bold">K Value</th>
+                        <th class="py-3 px-4 font-bold">Test Accuracy</th>
+                        <th class="py-3 px-4 font-bold">Train Accuracy</th>
+                        <th class="py-3 px-4 font-bold">Distance Metric</th>
+                        <th class="py-3 px-4 font-bold">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
+                    {% for row in k_results %}
+                        <tr class="{% if row.k == best_k %}bg-indigo-50/70 font-bold text-indigo-950{% else %}hover:bg-slate-50/60{% endif %}">
+                            <td class="py-2.5 px-4">
+                                <span class="px-2.5 py-0.5 rounded {% if row.k == best_k %}bg-indigo-600 text-white font-bold{% else %}bg-slate-100 text-slate-700{% endif %}">
+                                    K = {{ row.k }}
+                                </span>
+                            </td>
+                            <td class="py-2.5 px-4 font-mono font-bold {% if row.k == best_k %}text-emerald-700{% else %}text-slate-900{% endif %}">
+                                {{ row.accuracy_pct }}
+                            </td>
+                            <td class="py-2.5 px-4 font-mono text-slate-500">
+                                {% widthratio row.train_accuracy 1 100 %} %
+                            </td>
+                            <td class="py-2.5 px-4 font-mono text-xs text-slate-500">
+                                Euclidean (L2, p=2)
+                            </td>
+                            <td class="py-2.5 px-4">
+                                {% if row.k == best_k %}
+                                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        ★ OPTIMAL MODEL
+                                    </span>
+                                {% elif row.k == 1 %}
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+                                        Overfitting Risk
+                                    </span>
+                                {% else %}
+                                    <span class="text-slate-400 text-[11px]">Valid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

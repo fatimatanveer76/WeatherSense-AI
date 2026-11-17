@@ -1,0 +1,374 @@
+{% extends "predictor/base.html" %}
+
+{% block title %}Weather Forecast Predictor - KNN Classifier{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Weather Forecasting AI</h1>
+            <p class="text-slate-600 mt-1 text-sm">
+                Real-time non-parametric classification powered by K-Nearest Neighbors with automated feature scaling & imputation.
+            </p>
+        </div>
+        <!-- Quick Presets -->
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Presets:</span>
+            <button type="button" onclick="loadPreset('sunny')" class="px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors">
+                ☀️ Sunny
+            </button>
+            <button type="button" onclick="loadPreset('rainy')" class="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors">
+                🌧️ Rainstorm
+            </button>
+            <button type="button" onclick="loadPreset('snowy')" class="px-2.5 py-1 text-xs font-medium rounded-md bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border border-cyan-200 transition-colors">
+                ❄️ Snow
+            </button>
+            <button type="button" onclick="loadPreset('cloudy')" class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 transition-colors">
+                ☁️ Overcast
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <!-- Form Column -->
+    <div class="lg:col-span-7 space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8">
+            <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg text-lg">🌡️</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Atmospheric Measurements</h2>
+                        <p class="text-xs text-slate-500">Inputs are automatically standardized (mean=0, std=1) before distance calculation.</p>
+                    </div>
+                </div>
+                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">10 Features</span>
+            </div>
+
+            <form method="POST" action="{% url 'predictor:predict' %}" id="forecastForm" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Numerical Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Temperature -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Temperature (°C)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="Temperature_C" id="tempInput"
+                                   value="{{ input_data.Temperature_C|default:'26.5' }}"
+                                   placeholder="e.g. 26.5"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">°C</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Typical: -15°C to 45°C</p>
+                    </div>
+
+                    <!-- Humidity -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Relative Humidity (%)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="Humidity_pct" id="humidityInput"
+                                   value="{{ input_data.Humidity_pct|default:'42.0' }}"
+                                   placeholder="e.g. 42.0"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">%</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Typical: 15% to 100%</p>
+                    </div>
+
+                    <!-- Wind Speed -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Wind Speed (km/h)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="Wind_Speed_kmh" id="windSpeedInput"
+                                   value="{{ input_data.Wind_Speed_kmh|default:'14.2' }}"
+                                   placeholder="e.g. 14.2"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">km/h</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Typical: 0 to 60 km/h</p>
+                    </div>
+
+                    <!-- Precipitation -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Precipitation (mm)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.01" name="Precipitation_mm" id="precipInput"
+                                   value="{{ input_data.Precipitation_mm|default:'0.0' }}"
+                                   placeholder="e.g. 0.0"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">mm</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Rain / snow equiv (0 to 50 mm)</p>
+                    </div>
+
+                    <!-- Atmospheric Pressure -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Atmospheric Pressure (hPa)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="Atmospheric_Pressure_hPa" id="pressureInput"
+                                   value="{{ input_data.Atmospheric_Pressure_hPa|default:'1018.5' }}"
+                                   placeholder="e.g. 1018.5"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">hPa</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Standard: 980 to 1035 hPa</p>
+                    </div>
+
+                    <!-- UV Index -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            UV Index (0 - 12)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="UV_Index" id="uvInput"
+                                   value="{{ input_data.UV_Index|default:'7.5' }}"
+                                   placeholder="e.g. 7.5"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">UV</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">0 (Low) to 11+ (Extreme)</p>
+                    </div>
+
+                    <!-- Visibility -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wide mb-1">
+                            Visibility (km)
+                        </label>
+                        <div class="relative rounded-md shadow-sm">
+                            <input type="number" step="0.1" name="Visibility_km" id="visibilityInput"
+                                   value="{{ input_data.Visibility_km|default:'16.0' }}"
+                                   placeholder="e.g. 16.0"
+                                   class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <span class="absolute right-3 top-2.5 text-xs text-slate-400">km</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Typical: 0.5 km (Fog/Heavy Snow) to 20 km (Crystal Clear)</p>
+                    </div>
+                </div>
+
+                <!-- Categorical Dropdowns -->
+                <div class="pt-4 border-t border-slate-100">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Qualitative & Contextual Factors</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Cloud Cover -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Cloud Cover</label>
+                            <select name="Cloud_Cover" id="cloudInput" class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                {% for opt in cat_options.Cloud_Cover %}
+                                    <option value="{{ opt }}" {% if input_data.Cloud_Cover == opt or not input_data.Cloud_Cover and opt == 'Clear' %}selected{% endif %}>
+                                        {{ opt }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Wind Direction -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Wind Direction</label>
+                            <select name="Wind_Direction" id="windDirInput" class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                {% for opt in cat_options.Wind_Direction %}
+                                    <option value="{{ opt }}" {% if input_data.Wind_Direction == opt or not input_data.Wind_Direction and opt == 'SW' %}selected{% endif %}>
+                                        {{ opt }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Season -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Season</label>
+                            <select name="Season" id="seasonInput" class="w-full text-sm rounded-lg border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                {% for opt in cat_options.Season %}
+                                    <option value="{{ opt }}" {% if input_data.Season == opt or not input_data.Season and opt == 'Summer' %}selected{% endif %}>
+                                        {{ opt }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2">
+                        <span>🔍 Calculate Distances & Predict Weather (K={{ metadata.best_k|default:18 }})</span>
+                    </button>
+                    <p class="text-center text-[11px] text-slate-400 mt-2">
+                        Missing or empty fields are automatically imputed using precomputed median and mode statistics.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Prediction Result Column -->
+    <div class="lg:col-span-5 space-y-6">
+        {% if prediction %}
+            <!-- Result Box -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 space-y-6">
+                <!-- Top Header Badge -->
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Forecast Result</span>
+                    <span class="text-xs font-semibold px-2.5 py-1 rounded-full {{ prediction.meta.badge }} border">
+                        Optimal K = {{ prediction.k_used }} ({{ prediction.metric_used }})
+                    </span>
+                </div>
+
+                <!-- Weather Card Highlight -->
+                <div class="rounded-2xl p-6 bg-gradient-to-br {{ prediction.meta.gradient }} text-white shadow-lg relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="text-4xl mb-2">{{ prediction.meta.icon }}</div>
+                            <h3 class="text-3xl font-extrabold tracking-tight">{{ prediction.weather_type }}</h3>
+                            <p class="text-xs text-white/90 mt-1 max-w-xs">{{ prediction.meta.description }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-3xl font-black">{{ prediction.confidence }}%</span>
+                            <p class="text-[10px] uppercase font-bold tracking-wider text-white/80">Neighborhood Vote</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Imputation Alerts (if any) -->
+                {% if prediction.missing_handled %}
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
+                        <span class="font-bold flex items-center gap-1">⚙️ Automatic Imputation Triggered:</span>
+                        <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-700">
+                            {% for item in prediction.missing_handled %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <!-- Class Probabilities -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Vote Distribution Among K={{ prediction.k_used }} Neighbors</h4>
+                    <div class="space-y-2">
+                        {% for item in prediction.class_probabilities %}
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="{% if item.is_winner %}text-indigo-600 font-bold{% else %}text-slate-600{% endif %}">
+                                        {{ item.class }}
+                                    </span>
+                                    <span class="text-slate-500">{{ item.pct }}%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="h-2 rounded-full {% if item.is_winner %}bg-indigo-600{% else %}bg-slate-300{% endif %}" style="width: {{ item.pct }}%"></div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Nearest Neighbors Breakdown -->
+                <div class="pt-4 border-t border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Closest Historical Points</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-slate-100 pb-1">
+                                    <th class="py-1">Rank</th>
+                                    <th class="py-1">Neighbor Label</th>
+                                    <th class="py-1 text-right">{{ prediction.metric_used }} Dist</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-600">
+                                {% for n in prediction.nearest_neighbors|slice:":5" %}
+                                    <tr>
+                                        <td class="py-1.5 font-medium text-slate-400">#{{ forloop.counter }}</td>
+                                        <td class="py-1.5 font-semibold text-slate-800">{{ n.label }}</td>
+                                        <td class="py-1.5 text-right font-mono text-slate-500">{{ n.distance }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-2 text-right">Showing top 5 of {{ prediction.k_used }} evaluated neighbors.</p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Empty State Guide -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-8 text-center space-y-4">
+                <div class="w-16 h-16 mx-auto bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-3xl">
+                    🛰️
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Ready to Classify</h3>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                    Adjust the meteorological measurements on the left or select a preset above, then click 
+                    <span class="font-semibold text-indigo-600">"Calculate Distances & Predict Weather"</span> to evaluate the K={{ metadata.best_k|default:18 }} nearest neighbors in standardized feature space.
+                </p>
+                
+                <div class="pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-left">
+                    <div class="p-3 bg-slate-50 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Optimal K</span>
+                        <p class="text-lg font-extrabold text-slate-800">K = {{ metadata.best_k|default:18 }}</p>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-xl">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase">Model Accuracy</span>
+                        <p class="text-lg font-extrabold text-emerald-600">{{ metadata.highest_accuracy_pct|default:"96.67%" }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function loadPreset(type) {
+    if (type === 'sunny') {
+        document.getElementById('tempInput').value = '31.5';
+        document.getElementById('humidityInput').value = '32.0';
+        document.getElementById('windSpeedInput').value = '11.0';
+        document.getElementById('precipInput').value = '0.0';
+        document.getElementById('pressureInput').value = '1022.0';
+        document.getElementById('uvInput').value = '9.0';
+        document.getElementById('visibilityInput').value = '18.0';
+        document.getElementById('cloudInput').value = 'Clear';
+        document.getElementById('seasonInput').value = 'Summer';
+    } else if (type === 'rainy') {
+        document.getElementById('tempInput').value = '16.5';
+        document.getElementById('humidityInput').value = '91.0';
+        document.getElementById('windSpeedInput').value = '28.0';
+        document.getElementById('precipInput').value = '18.5';
+        document.getElementById('pressureInput').value = '998.0';
+        document.getElementById('uvInput').value = '1.2';
+        document.getElementById('visibilityInput').value = '4.5';
+        document.getElementById('cloudInput').value = 'Overcast';
+        document.getElementById('seasonInput').value = 'Autumn';
+    } else if (type === 'snowy') {
+        document.getElementById('tempInput').value = '-5.5';
+        document.getElementById('humidityInput').value = '82.0';
+        document.getElementById('windSpeedInput').value = '22.0';
+        document.getElementById('precipInput').value = '4.8';
+        document.getElementById('pressureInput').value = '1008.0';
+        document.getElementById('uvInput').value = '0.8';
+        document.getElementById('visibilityInput').value = '2.5';
+        document.getElementById('cloudInput').value = 'Overcast';
+        document.getElementById('seasonInput').value = 'Winter';
+    } else if (type === 'cloudy') {
+        document.getElementById('tempInput').value = '19.0';
+        document.getElementById('humidityInput').value = '68.0';
+        document.getElementById('windSpeedInput').value = '15.0';
+        document.getElementById('precipInput').value = '0.2';
+        document.getElementById('pressureInput').value = '1014.0';
+        document.getElementById('uvInput').value = '3.5';
+        document.getElementById('visibilityInput').value = '11.0';
+        document.getElementById('cloudInput').value = 'Partly Cloudy';
+        document.getElementById('seasonInput').value = 'Spring';
+    }
+}
+</script>
+{% endblock %}
+

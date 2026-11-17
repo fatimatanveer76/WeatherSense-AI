@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}WeatherSense AI - KNN Forecasting{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 glass-panel border-b border-slate-200/80 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">🌦️</span>
+                    <div>
+                        <a href="{% url 'predictor:predict' %}" class="text-xl font-bold bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">
+                            WeatherSense <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 ml-1">KNN AI</span>
+                        </a>
+                        <p class="text-[11px] text-slate-500 hidden sm:block">K-Nearest Neighbors Meteorology Engine</p>
+                    </div>
+                </div>
+
+                <!-- Nav Links -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="{% url 'predictor:predict' %}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {% if request.resolver_match.url_name == 'predict' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+                        🌤️ Predict Weather
+                    </a>
+                    <a href="{% url 'predictor:insights' %}" class="px-3 py-1.5 rounded-lg text-sm font-medium transition-all {% if request.resolver_match.url_name == 'insights' %}bg-indigo-600 text-white shadow-sm{% else %}text-slate-600 hover:text-slate-900 hover:bg-slate-100{% endif %}">
+                        📊 Model & Math Insights
+                    </a>
+                    <div class="hidden md:flex items-center pl-3 border-l border-slate-200 text-xs text-slate-500 space-x-2">
+                        <span class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded font-semibold">
+                            Best K = {{ metadata.best_k|default:18 }}
+                        </span>
+                        <span class="px-2 py-1 bg-sky-50 text-sky-700 border border-sky-200 rounded font-semibold">
+                            Acc: {{ metadata.highest_accuracy_pct|default:"96.67%" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-medium text-slate-700">Weather Forecasting with K-Nearest Neighbors (KNN) & Django</p>
+            <p class="mt-1 text-slate-400">Automated Imputation • Z-Score Standardization • Hyperparameter Optimization ($K=1 \dots 20$) • Distance Vectorization</p>
+        </div>
+    </footer>
+</body>
+</html>
+

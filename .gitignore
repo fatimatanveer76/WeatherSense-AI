@@ -1,0 +1,26 @@
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Matplotlib cache
+.matplotlib_cache/
+
+# Django database
+db.sqlite3
+
+# Environment variables
+.env
+
+# Log files
+*.log
+
+# Downloaded wheel files
+*.whl
+
+# Operating system files
+.DS_Store
+Thumbs.db
